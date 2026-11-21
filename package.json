@@ -1,0 +1,6 @@
+{
+  "name": "spot-the-difference-moonlit-stall",
+  "private": true,
+  "type": "module",
+  "scripts": { "test": "node --test" }
+}

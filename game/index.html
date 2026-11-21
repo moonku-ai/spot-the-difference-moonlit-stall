@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cari Bedanya! — Warung Mie Bulan</title>
+<style>
+  :root {
+    --pink: #ec4899;
+    --violet: #8b5cf6;
+    --gold: #f59e0b;
+    --cream: #fff7ed;
+    --paper: #fdf2f8;
+    --ink: #1f2937;
+    --muted: #475569;
+    --green: #22c55e;
+    --red: #dc2626;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    background: var(--paper);
+    font-family: "Trebuchet MS", "Segoe UI", system-ui, sans-serif;
+    color: var(--ink);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+  #stage {
+    width: 1280px;
+    height: 800px;
+    flex: 0 0 auto;
+    transform-origin: center center;
+    padding: 16px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    position: relative;
+  }
+
+  /* ---- header ---- */
+  header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: var(--cream);
+    border: 3px solid var(--ink);
+    border-radius: 20px;
+    box-shadow: 0 5px 0 rgba(31, 41, 55, 0.18);
+    padding: 10px 18px;
+  }
+  .brand { font-size: 30px; font-weight: 800; letter-spacing: -0.5px; }
+  .brand b { color: var(--pink); }
+  #hud-level {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--violet);
+    background: #ede9fe;
+    border: 2px solid var(--ink);
+    border-radius: 999px;
+    padding: 6px 14px;
+    white-space: nowrap;
+  }
+  .spacer { flex: 1; }
+  .stat {
+    text-align: center;
+    min-width: 86px;
+  }
+  .stat .label { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+  .stat .value { font-size: 26px; font-weight: 800; line-height: 1.05; font-variant-numeric: tabular-nums; }
+  .timer-wrap { width: 190px; }
+  .timer-track {
+    height: 14px;
+    background: #fff;
+    border: 2px solid var(--ink);
+    border-radius: 999px;
+    overflow: hidden;
+    margin-top: 4px;
+  }
+  #timer-fill {
+    height: 100%;
+    width: 100%;
+    background: var(--gold);
+    transform: scaleX(1);
+    transform-origin: left center;
+    transition: transform 0.3s linear;
+  }
+  #timer-fill.low { background: var(--red); }
+
+  /* ---- play area ---- */
+  #boards {
+    display: flex;
+    gap: 16px;
+    align-items: stretch;
+    flex: 1;
+  }
+  .panel {
+    flex: 1;
+    background: #fff;
+    border: 3px solid var(--ink);
+    border-radius: 20px;
+    box-shadow: 0 5px 0 rgba(31, 41, 55, 0.18);
+    padding: 10px 12px 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .panel-tag {
+    align-self: flex-start;
+    font-size: 14px;
+    font-weight: 800;
+    background: var(--ink);
+    color: #fff;
+    border-radius: 999px;
+    padding: 3px 12px;
+  }
+  .panel-tag.right { background: var(--violet); }
+  canvas {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 12px;
+    border: 2px solid var(--ink);
+    cursor: crosshair;
+    background: #1b2340;
+    touch-action: manipulation;
+  }
+  .divider {
+    width: 92px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  .remain-badge {
+    width: 84px;
+    height: 84px;
+    border-radius: 50%;
+    background: var(--pink);
+    color: #fff;
+    border: 3px solid var(--ink);
+    box-shadow: 0 5px 0 rgba(31, 41, 55, 0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 44px;
+    font-weight: 800;
+  }
+  .remain-label {
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--muted);
+    text-align: center;
+    line-height: 1.2;
+  }
+  .vs {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--gold);
+    background: #fff;
+    border: 3px solid var(--ink);
+    border-radius: 999px;
+    padding: 2px 12px;
+    box-shadow: 0 3px 0 rgba(31, 41, 55, 0.2);
+  }
+
+  /* ---- footer ---- */
+  footer {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: var(--cream);
+    border: 3px solid var(--ink);
+    border-radius: 20px;
+    box-shadow: 0 5px 0 rgba(31, 41, 55, 0.18);
+    padding: 10px 16px;
+    min-height: 76px;
+  }
+  #hud-dots { display: flex; gap: 7px; align-items: center; }
+  .dot {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 2px solid var(--ink);
+    background: #fff;
+  }
+  .dot.found { background: var(--green); }
+  #found-list {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 14px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #15803d;
+    flex: 1;
+  }
+  button {
+    font-family: inherit;
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--ink);
+    background: #fff;
+    border: 3px solid var(--ink);
+    border-radius: 16px;
+    padding: 9px 16px;
+    cursor: pointer;
+    box-shadow: 0 4px 0 var(--ink);
+    touch-action: manipulation;
+    transition: transform 0.15s ease-out, box-shadow 0.15s ease-out, background 0.15s ease-out;
+  }
+  button:hover { background: #fef3c7; }
+  button:active { transform: translateY(3px) scale(0.97); box-shadow: 0 1px 0 var(--ink); transition-duration: 80ms; }
+  button:focus-visible { outline: 3px solid var(--violet); outline-offset: 2px; }
+  button.primary { background: var(--pink); color: #fff; }
+  button.primary:hover { background: #db2777; }
+  button.gold { background: var(--gold); color: var(--ink); }
+  button.gold:hover { background: #d97706; color: #fff; }
+
+  /* ---- overlays ---- */
+  .overlay {
+    position: absolute;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: rgba(31, 41, 55, 0.45);
+    border-radius: 20px;
+    z-index: 10;
+  }
+  .overlay.show { display: flex; }
+  .card {
+    background: var(--cream);
+    border: 3px solid var(--ink);
+    border-radius: 24px;
+    box-shadow: 0 8px 0 rgba(31, 41, 55, 0.3);
+    padding: 28px 34px;
+    max-width: 560px;
+    text-align: center;
+  }
+  .card h1 { font-size: 44px; line-height: 1.05; letter-spacing: -1px; }
+  .card h1 b { color: var(--pink); }
+  .card h2 { font-size: 32px; margin-bottom: 6px; }
+  .card p { font-size: 17px; color: var(--muted); margin: 10px 0 18px; line-height: 1.45; }
+  .card .row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 14px; }
+  .level-pick {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin: 16px 0 6px;
+  }
+  .level-pick button { font-size: 15px; padding: 10px 12px; text-align: center; }
+  .level-pick button small { display: block; font-size: 12px; font-weight: 700; color: var(--muted); }
+  kbd {
+    background: #fff;
+    border: 2px solid var(--ink);
+    border-bottom-width: 3px;
+    border-radius: 6px;
+    padding: 1px 7px;
+    font-family: inherit;
+    font-weight: 800;
+    font-size: 13px;
+  }
+  .howto-list { text-align: left; font-size: 16px; line-height: 1.7; color: var(--ink); margin: 8px 0 4px; }
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
+  }
+</style>
+</head>
+<body>
+<div id="stage">
+  <header>
+    <div class="brand">Cari <b>Bedanya!</b></div>
+    <div id="hud-level">Level 1 · Warung Mie Bulan</div>
+    <div class="spacer"></div>
+    <div class="stat">
+      <div class="label">Skor</div>
+      <div class="value" id="hud-score">0</div>
+    </div>
+    <div class="timer-wrap">
+      <div class="label" style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;">Waktu <span id="hud-timer">2:30</span></div>
+      <div class="timer-track"><div id="timer-fill"></div></div>
+    </div>
+  </header>
+
+  <div id="boards">
+    <div class="panel">
+      <span class="panel-tag">KIRI</span>
+      <canvas id="panel-left" width="560" height="420" role="img" aria-label="Gambar kiri: adegan yang harus dibandingkan"></canvas>
+    </div>
+    <div class="divider">
+      <div class="vs">VS</div>
+      <div class="remain-badge" id="hud-remaining">7</div>
+      <div class="remain-label">perbedaan<br>tersisa</div>
+    </div>
+    <div class="panel">
+      <span class="panel-tag right">KANAN</span>
+      <canvas id="panel-right" width="560" height="420" role="img" aria-label="Gambar kanan: adegan yang harus dibandingkan"></canvas>
+    </div>
+  </div>
+
+  <footer>
+    <div id="hud-dots" aria-label="Perbedaan yang sudah ketemu"></div>
+    <ul id="found-list"></ul>
+    <button id="btn-hint" class="gold"><span id="hud-hints">Petunjuk 3</span></button>
+    <button id="btn-restart">Ulangi</button>
+    <button id="btn-sound">Suara: Nyala</button>
+    <button id="btn-howto">Cara main</button>
+  </footer>
+
+  <div class="overlay" id="overlay-title">
+    <div class="card">
+      <h1>Cari <b>Bedanya!</b></h1>
+      <p>Dua gambar hampir sama. Temukan <b>7 perbedaan</b> di setiap level sebelum waktu habis. Klik gambarnya — kiri atau kanan, sama saja.</p>
+      <div class="level-pick">
+        <button data-level="0">Level 1<small>Warung Mie Bulan</small></button>
+        <button data-level="1">Level 2<small>Pasar Pagi</small></button>
+        <button data-level="2">Level 3<small>Jendela Kereta</small></button>
+      </div>
+      <div class="row">
+        <button id="btn-play" class="primary">Mulai main</button>
+      </div>
+      <p style="font-size:14px;margin-top:14px;">Keyboard: <kbd>H</kbd> petunjuk · <kbd>R</kbd> ulangi · <kbd>1</kbd>–<kbd>3</kbd> pilih level · <kbd>M</kbd> suara</p>
+    </div>
+  </div>
+
+  <div class="overlay" id="overlay-complete">
+    <div class="card">
+      <h2 id="complete-title">Level selesai!</h2>
+      <p id="complete-stats"></p>
+      <div class="row">
+        <button id="btn-next" class="primary">Level berikutnya</button>
+        <button id="btn-title">Menu utama</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay" id="overlay-timeup">
+    <div class="card">
+      <h2>Waktu habis!</h2>
+      <p id="timeup-stats"></p>
+      <div class="row">
+        <button id="btn-retry" class="primary">Coba lagi</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay" id="overlay-howto">
+    <div class="card">
+      <h2>Cara main</h2>
+      <div class="howto-list">
+        <div>1. Bandingkan gambar kiri dan kanan — ada <b>7 perbedaan</b>.</div>
+        <div>2. Klik perbedaannya di gambar mana saja.</div>
+        <div>3. Lingkaran hijau = ketemu. Klik yang salah mengurangi waktu 5 detik.</div>
+        <div>4. Stuck? Pakai <b>Petunjuk</b> (3x per level) atau tekan <kbd>H</kbd>.</div>
+        <div>5. Selesaikan 3 level untuk menang.</div>
+      </div>
+      <div class="row">
+        <button id="btn-howto-close" class="primary">Siap, main!</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script type="module" src="./src/main.js"></script>
+</body>
+</html>
